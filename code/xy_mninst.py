@@ -37,7 +37,7 @@ def createNormalModel():
     model.add(Dense(units=64, input_dim=100))
     model.add(Activation("relu"))
     # model.add(Conv2D())
-    model.add(Dense(units=10))
+    model.add(Dense(units=num_classes))
     model.add(Activation("softmax"))
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     return model
