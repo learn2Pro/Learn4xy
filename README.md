@@ -3,9 +3,16 @@
 # 1.cnn 几种网络结构 简单了解即可 Lenet,googlenet,resnet,capsule-net
 # 2.重点 gan papers https://github.com/learn2Pro/AdversarialNetsPapers
 ## gen high-quality image
+
+1. 图片聚类 
+
 :white_check_mark: [Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks] [[Paper]](https://arxiv.org/abs/1511.06434)[[Code]](https://github.com/jacobgil/keras-dcgan)(Gan with convolutional networks)(ICLR)
 
+2. 文本合成图片 文本向量-->特征-->图片 就是找对应关系
+
 :white_check_mark: [Generative Adversarial Text to Image Synthesis] [[Paper]](https://arxiv.org/abs/1605.05396)[[Code]](https://github.com/reedscot/icml2016)[[code]](https://github.com/paarthneekhara/text-to-image)
+
+3.更快的方式训练gan，不用了解，工程上的提升
 
 :white_check_mark: [Improved Techniques for Training GANs] [[Paper]](https://arxiv.org/abs/1606.03498)[[Code]](https://github.com/openai/improved-gan)(Goodfellow's paper)
 
@@ -19,6 +26,11 @@
 
 :white_check_mark: [Progressive Growing of GANs for Improved Quality, Stability, and Variation ] [[Paper]](http://research.nvidia.com/publication/2017-10_Progressive-Growing-of)[[Code]](https://github.com/tkarras/progressive_growing_of_gans)[[Tensorflow Code]](https://github.com/zhangqianhui/PGGAN-tensorflow)
 
+## Image blending
+
+1.提升画质
+
+:white_check_mark: [GP-GAN: Towards Realistic High-Resolution Image Blending] [[Paper]](https://arxiv.org/abs/1703.07195)[[Code]](https://github.com/wuhuikai/GP-GAN)
 
 ## 工程
 ### 1.部署环境 1-2d
