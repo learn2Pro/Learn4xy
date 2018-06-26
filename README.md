@@ -2,6 +2,17 @@
 # nn https://www.nature.com/articles/nature14539 这篇论文综述了10年神经网络的几个重要节点，可以先了解下(由3巨头编写)
 # 1.cnn 几种网络结构 简单了解即可 Lenet,googlenet,resnet,capsule-net
 # 2.重点 gan papers https://github.com/learn2Pro/AdversarialNetsPapers
+# 3.Tutorial
+  :white_check_mark: [1] http://www.iangoodfellow.com/slides/2016-12-04-NIPS.pdf (NIPS Goodfellow Slides)[[Chinese Trans]](http://c.m.163.com/news/a/C7UE2MLT0511AQHO.html?spss=newsapp&spsw=1)[[details]](https://arxiv.org/pdf/1701.00160v1.pdf)
+
+## Super-Resolution
+
+:white_check_mark: [Image super-resolution through deep learning ][[Code]](https://github.com/david-gpu/srez)(Just for face dataset)
+
+:white_check_mark: [Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network] [[Paper]](https://arxiv.org/abs/1609.04802)[[Code]](https://github.com/leehomyc/Photo-Realistic-Super-Resoluton)（Using Deep residual network）
+
+:white_check_mark: [EnhanceGAN] [[Docs]](https://medium.com/@richardherbert/faces-from-noise-super-enhancing-8x8-images-with-enhancegan-ebda015bb5e0#.io6pskvin)[[Code]]
+
 ## gen high-quality image
 
 1. 图片聚类 
@@ -31,6 +42,12 @@
 1.提升画质
 
 :white_check_mark: [GP-GAN: Towards Realistic High-Resolution Image Blending] [[Paper]](https://arxiv.org/abs/1703.07195)[[Code]](https://github.com/wuhuikai/GP-GAN)
+
+## Object Detection
+
+:white_check_mark: [Perceptual generative adversarial networks for small object detection] [[Paper]](https://arxiv.org/abs/1706.05274v2)(CVPR 2017)
+
+:white_check_mark: [A-Fast-RCNN: Hard Positive Generation via Adversary for Object Detection] [[Paper]](http://abhinavsh.info/papers/pdfs/adversarial_object_detection.pdf)[[code]](https://github.com/xiaolonw/adversarial-frcnn)(CVPR2017)
 
 ## 工程
 ### 1.部署环境 1-2d
