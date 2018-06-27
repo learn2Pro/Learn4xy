@@ -1,9 +1,13 @@
 # 理论
 # nn https://www.nature.com/articles/nature14539 这篇论文综述了10年神经网络的几个重要节点，可以先了解下(由3巨头编写)
 # 1.cnn 几种网络结构 简单了解即可 Lenet,googlenet,resnet,capsule-net
-# 2.重点 gan papers https://github.com/learn2Pro/AdversarialNetsPapers
+# 2.重点 gan papers 
+
+:white_check_mark: [Generative Adversarial Nets] [[Paper]](https://arxiv.org/abs/1406.2661)
+[[Code]](https://github.com/goodfeli/adversarial)(the First paper of GAN)
+
 # 3.Tutorial
-  :white_check_mark: [1] http://www.iangoodfellow.com/slides/2016-12-04-NIPS.pdf (NIPS Goodfellow Slides)[[Chinese Trans]](http://c.m.163.com/news/a/C7UE2MLT0511AQHO.html?spss=newsapp&spsw=1)[[details]](https://arxiv.org/pdf/1701.00160v1.pdf)
+:white_check_mark: [1] http://www.iangoodfellow.com/slides/2016-12-04-NIPS.pdf (NIPS Goodfellow Slides)[[Chinese Trans]](http://c.m.163.com/news/a/C7UE2MLT0511AQHO.html?spss=newsapp&spsw=1)[[details]](https://arxiv.org/pdf/1701.00160v1.pdf)
 
 ## Super-Resolution
 
