@@ -190,5 +190,7 @@ if __name__ == '__main__':
     (x_train, y_train), (x_test, y_test) = handleNormalData()
     model = createNormalModel()
     result = trainModel(x_train, y_train, model)
-    print("this is main"+result.epoch.size)
+    eval = evaluate(x_test, y_test, model)
+    print("this is main" + str(len(result.epoch)))
+    print("eval accuracy is " + str(eval[1]))
     # plotDenseResult(model, result)
