@@ -8,7 +8,8 @@ from skimage import io
 fa = face_alignment.FaceAlignment(face_alignment.LandmarksType._3D, enable_cuda=False, flip_input=True)
 
 input = io.imread('../../data/z_baby_GT_intermediate_.bmp')
-preds = fa.get_landmarks(input)[-1]
+originPred = fa.get_landmarks(input)
+preds = originPred[-1]
 
 #TODO: Make this nice
 fig = plt.figure(figsize=plt.figaspect(.5))
@@ -23,7 +24,7 @@ ax.plot(preds[36:42,0],preds[36:42,1],marker='o',markersize=6,linestyle='-',colo
 ax.plot(preds[42:48,0],preds[42:48,1],marker='o',markersize=6,linestyle='-',color='w',lw=2)
 ax.plot(preds[48:60,0],preds[48:60,1],marker='o',markersize=6,linestyle='-',color='w',lw=2)
 ax.plot(preds[60:68,0],preds[60:68,1],marker='o',markersize=6,linestyle='-',color='w',lw=2)
-ax.axis('off')
+# ax.axis('off')
 
 ax = fig.add_subplot(1, 2, 2, projection='3d')
 surf = ax.scatter(preds[:,0]*1.2,preds[:,1],preds[:,2],c="cyan", alpha=1.0, edgecolor='b')
@@ -39,3 +40,5 @@ ax.plot3D(preds[48:,0]*1.2,preds[48:,1],preds[48:,2], color='blue' )
 ax.view_init(elev=90., azim=90.)
 ax.set_xlim(ax.get_xlim()[::-1])
 plt.show()
+
+plt.waitforbuttonpress()
