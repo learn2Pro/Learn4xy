@@ -15,11 +15,6 @@ right2left_lens_dis = 1200
 ## mm g2
 left2image_dis = 25.3451
 
-
-###input param
-## right lens
-right_lens_num_x = 35
-right_lens_num_y = 19
 ## mm
 # right_lens_pitch = 14.7
 right_lens_pitch = 0.492
@@ -27,9 +22,7 @@ right_lens_pitch = 0.492
 p_size_x = 3840
 p_size_y = 2160
 
-
-def getLeftLensNum():
-    return p_size / right_lens_num
+isDebug = False
 
 
 def getLeftLensPitch(pixNum, lensNum):
@@ -67,9 +60,11 @@ def getLocalDis(localIdx, lens_num, pitch):
 ## y1 pix dis
 def getPixDis(globalPix, pixNum):
     local = getLensLocal(globalPix, pixNum)
-    print("right pix local id:" + str(local))
+    if isDebug:
+        print("right pix local id:" + str(local))
     rightPixDis = getLocalDis(local, pixNum, p_right_dis)
-    print("rightPixDis:" + str(rightPixDis))
+    if isDebug:
+        print("rightPixDis:" + str(rightPixDis))
     return rightPixDis
 
 
@@ -93,7 +88,8 @@ def getY3(globalPix, pixNum, lensNum):
     leftLensNum = pixNum / lensNum
     (globalId, leftLensLocalId) = getLeftLensLocalId(globalPix, pixNum, lensNum)
     y3 = getLocalDis(leftLensLocalId, leftLensNum, getLeftLensPitch(pixNum, lensNum))
-    print("y3 is:" + str(y3))
+    if isDebug:
+        print("y3 is:" + str(y3))
     return (globalId, y3)
 
 
@@ -108,13 +104,16 @@ def getLeftLensLocalId(globalPix, pixNum, lensNum):
 ### g2=left2image_dis
 def getY4(globalPix, pixNum, lensNum):
     y1 = getY1(globalPix, pixNum)
-    print("y1 is:" + str(y1))
+    if isDebug:
+        print("y1 is:" + str(y1))
     (rightLensGlobalId, localId) = getPix2LensMappingV2(globalPix, pixNum, lensNum)
     (leftLensGlobalId, y3) = getY3(globalPix, pixNum, lensNum)
     y2 = getY2(localId, lensNum)
-    print("y2 is:" + str(y2))
+    if isDebug:
+        print("y2 is:" + str(y2))
     y4 = (y2 - y1) * left2image_dis / right2image_dis + y3
-    print("y4 is:" + str(y4))
+    if isDebug:
+        print("y4 is:" + str(y4))
     return leftLensGlobalId, y4
 
 
@@ -128,44 +127,75 @@ def getOffsetPos(globalPix, pixNum, lensNum, a):
     (globalId, y3) = getY3(globalPix, pixNum, lensNum)
     return (leftLensGlobalId, round((y4 - y3 + 0.5 * getImageSize(a)) / p_left_dis))
 
-def getImageName(x,y):
-    realNum = (x*107+y).zfill(5)
-    return "G:\TwoPickupII\ParaImages\Para"+str(realNum)+".jpg"
 
-def main(imgSize, len, angle):
+def getImageName(x, y):
+    realNum = str(x * 108 + y).zfill(5)
+    return "G:\TwoPickupII\ParaImages\Para" + str(realNum) + ".jpg"
+
+
+def main(imgSize_x, imgSize_y, right_len_x, right_len_y, angle):
     dict = {}
-    for pix_x in range(0, imgSize):
-        for pix_y in range(0, imgSize):
-            print("pix id: x:" + str(pix_x) + " y:" + str(pix_y))
-            (left_lens_x, left_pix_x) = getOffsetPos(pix_x, imgSize, len, angle)
-            (left_lens_y, left_pix_y) = getOffsetPos(pix_y, imgSize, len, angle)
+    for pix_x in range(0, imgSize_x):
+        for pix_y in range(0, imgSize_y):
+            if isDebug:
+                print("pix id: x:" + str(pix_x) + " y:" + str(pix_y))
+            (left_lens_x, left_pix_x) = getOffsetPos(pix_x, imgSize_x, right_len_x, angle)
+            (left_lens_y, left_pix_y) = getOffsetPos(pix_y, imgSize_y, right_len_y, angle)
             dict[(pix_x, pix_y)] = ((left_lens_x, left_lens_y), (left_pix_x, left_pix_y))
 
-    print("\n" + str(dict) + "\n")
+    if isDebug:
+        print("\n" + str(dict) + "\n")
     return dict
 
 
+def createParamList(imgSize_x, imgSize_y, right_len_x, right_len_y, angle):
+    list = []
+    for pix_x in range(0, imgSize_x):
+        for pix_y in range(0, imgSize_y):
+            list.append((pix_x, pix_y, imgSize_x, imgSize_y, right_len_x, right_len_y, angle))
+    return list
+
+
+def threadPoolHandle((pix_x, pix_y, imgSize_x, imgSize_y, right_len_x, right_len_y, angle)):
+    (left_lens_x, left_pix_x) = getOffsetPos(pix_x, imgSize_x, right_len_x, angle)
+    (left_lens_y, left_pix_y) = getOffsetPos(pix_y, imgSize_y, right_len_y, angle)
+    return ((left_lens_x, left_lens_y), (left_pix_x, left_pix_y))
+
+
+from multiprocessing.dummy import Pool as ThreadPool
+
 if __name__ == "__main__":
-    imgSize = 20
-    right_len = 4
-    left_len = imgSize / right_len
+    # print(getImageName(107, 107))
+    imgSize_x = 3840
+    imgSize_y = 2160
+    right_len_x = 35
+    right_len_y = 20
+    real_pix_x = 3780
+    real_pix_y = 2160
+    read_pix_x_offset = (imgSize_x - real_pix_x) / 2
+    read_pix_y_offset = (imgSize_y - real_pix_y) / 2
+    left_len_x = 108
+    left_len_y = 108
     angle = 72
-    dict = main(imgSize, right_len, angle)
-    lensImg = {}
-    for len_x in range(0, left_len):
-        for len_y in range(0, left_len):
-            if len_y == 0 and len_x == 0:
-                lensImg[(len_x, len_y)] = np.ones((800, 800)) * 256
-            else:
-                lensImg[(len_x, len_y)] = np.zeros((800, 800))
-    rsArr = np.zeros((imgSize,imgSize))
-    for pix_x in range(0, imgSize):
-        for pix_y in range(0, imgSize):
-            ((left_lens_x, left_lens_y), (left_pix_x, left_pix_y)) = dict[(pix_x, pix_y)]
-            img = lensImg[(left_lens_x, left_lens_y)]
-            rsArr[pix_x,pix_y] = img[(int(left_pix_x), int(left_pix_y))]
-    rsImg = Image.fromarray(rsArr)
-    rsImg.show()
-    rsImg.thumbnail((imgSize,imgSize))
-    rsImg.save('rs.tiff')
-    # rsImg.save("rs.tiff")
+
+    params = createParamList(real_pix_x, real_pix_y, right_len_x, right_len_y, angle)
+    pool = ThreadPool(4)
+    dict = pool.map(threadPoolHandle, params)
+    pool.close()
+    pool.join()
+    # dict = main(real_pix_x, real_pix_y, right_len_x, right_len_y, angle)
+    # lensImg = {}
+    # for len_x in range(0, left_len_x):
+    #     for len_y in range(0, left_len_y):
+    #         imgName = getImageName(left_len_x,left_len_y)
+    #         lensImg[(len_x, len_y)] = Image.open(imgName)
+    # rsArr = np.zeros((imgSize_x, imgSize_y))
+    # for pix_x in range(0, real_pix_x):
+    #     for pix_y in range(0, real_pix_y):
+    #         ((left_lens_x, left_lens_y), (left_pix_x, left_pix_y)) = dict[(pix_x, pix_y)]
+    #         imgName = getImageName(left_lens_x, left_lens_y)
+    #         img = Image.open(imgName)
+    #         rsArr[read_pix_x_offset + pix_x, read_pix_y_offset + pix_y] = img[(int(left_pix_x), int(left_pix_y))]
+    # rsImg = Image.fromarray(rsArr)
+    # rsImg.show()
+    # rsImg.save('rs.tiff')
