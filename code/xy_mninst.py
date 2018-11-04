@@ -8,6 +8,7 @@ import os
 from keras.utils import plot_model
 from keras.callbacks import EarlyStopping
 
+
 # 0-9 数字一共10类
 num_classes = 10  # class size
 # input vector size image size 28*28
@@ -72,6 +73,9 @@ def handleNormalData():
 #     |
 #     V
 #   Dense
+
+# conv2d
+#  if()
 def createNormalModel():
     denseModel = Sequential()
     denseModel.add(Dense(output_dim=128, input_dim=input_unit_size))

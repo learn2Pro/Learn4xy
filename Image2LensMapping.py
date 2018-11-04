@@ -6,23 +6,26 @@ from PIL import Image
 
 ## default size
 ## mm
-p_right_dis = 0.1
-p_left_dis = 0.2
+p_right_dis = 0.13725
+p_left_dis = 0.046
 ## left->right dis mm g1
-right2image_dis = 15.0
+right2image_dis = 14.5798
 ## mm
-right2left_lens_dis = 1000
+right2left_lens_dis = 1200
 ## mm g2
-left2image_dis = 80
+left2image_dis = 25.3451
+
 
 ###input param
 ## right lens
-right_lens_num = 35
+right_lens_num_x = 35
+right_lens_num_y = 19
 ## mm
 # right_lens_pitch = 14.7
 right_lens_pitch = 0.492
 ##
-p_size = 3840
+p_size_x = 3840
+p_size_y = 2160
 
 
 def getLeftLensNum():
@@ -125,6 +128,9 @@ def getOffsetPos(globalPix, pixNum, lensNum, a):
     (globalId, y3) = getY3(globalPix, pixNum, lensNum)
     return (leftLensGlobalId, round((y4 - y3 + 0.5 * getImageSize(a)) / p_left_dis))
 
+def getImageName(x,y):
+    realNum = (x*107+y).zfill(5)
+    return "G:\TwoPickupII\ParaImages\Para"+str(realNum)+".jpg"
 
 def main(imgSize, len, angle):
     dict = {}
@@ -143,7 +149,7 @@ if __name__ == "__main__":
     imgSize = 20
     right_len = 4
     left_len = imgSize / right_len
-    angle = 90
+    angle = 72
     dict = main(imgSize, right_len, angle)
     lensImg = {}
     for len_x in range(0, left_len):
