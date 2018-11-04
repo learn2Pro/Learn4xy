@@ -160,5 +160,6 @@ if __name__ == "__main__":
             rsArr[pix_x,pix_y] = img[(int(left_pix_x), int(left_pix_y))]
     rsImg = Image.fromarray(rsArr)
     rsImg.show()
+    rsImg.thumbnail((imgSize,imgSize))
     rsImg.save('rs.tiff')
     # rsImg.save("rs.tiff")
