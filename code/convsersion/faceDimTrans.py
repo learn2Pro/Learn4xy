@@ -1,5 +1,6 @@
-import face_alignment
 import numpy as np
+import face_alignment
+
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 from skimage import io
