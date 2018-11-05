@@ -3,11 +3,16 @@ import numpy as np
 
 from matplotlib import pyplot as plt
 from PIL import Image
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+from scipy import misc
+import imageio
+import time
 
 ## default size
 ## mm
-p_right_dis = 0.13725
-p_left_dis = 0.046
+pix_right_dis = 0.13725
+pix_left_dis = 0.046
 ## left->right dis mm g1
 right2image_dis = 14.5798
 ## mm
@@ -16,18 +21,15 @@ right2left_lens_dis = 1200
 left2image_dis = 25.3451
 
 ## mm
-# right_lens_pitch = 14.7
-right_lens_pitch = 0.492
-##
-p_size_x = 3840
-p_size_y = 2160
+right_lens_pitch = 14.7
+# right_lens_pitch = 0.492 * 108
 
 isDebug = False
 
 
 def getLeftLensPitch(pixNum, lensNum):
     leftLensNum = pixNum / lensNum
-    return (((leftLensNum - 1) * p_right_dis * right2left_lens_dis) / right2image_dis) / (leftLensNum - 1)
+    return (((leftLensNum - 1) * pix_right_dis * right2left_lens_dis) / right2image_dis) / (leftLensNum - 1)
 
 
 def getOdd(num):
@@ -52,9 +54,9 @@ def getLensLocal(lens_global_loc, lens_num):
 def getLocalDis(localIdx, lens_num, pitch):
     odd = getOdd(lens_num)
     if localIdx < 0:
-        return -1.0 * ((-localIdx - 1.0 * odd) * pitch + 0.5 * pitch * odd)
+        return (localIdx + 0.5 * odd) * pitch
     else:
-        return (localIdx - 1.0 * odd) * pitch + 0.5 * pitch * odd
+        return (localIdx - 0.5 * odd) * pitch
 
 
 ## y1 pix dis
@@ -62,7 +64,7 @@ def getPixDis(globalPix, pixNum):
     local = getLensLocal(globalPix, pixNum)
     if isDebug:
         print("right pix local id:" + str(local))
-    rightPixDis = getLocalDis(local, pixNum, p_right_dis)
+    rightPixDis = getLocalDis(local, pixNum, pix_right_dis)
     if isDebug:
         print("rightPixDis:" + str(rightPixDis))
     return rightPixDis
@@ -74,6 +76,12 @@ def getPix2LensMappingV2(globalPix, pixNum, lensNum):
     groupPixNum = pixNum / lensNum
     globalLensId = globalPix / groupPixNum
     return globalLensId, getLensLocal(globalLensId, lensNum)
+
+
+def getLeftLensLocalId(globalPix, pixNum, lensNum):
+    groupPixNum = pixNum / lensNum
+    groupId = groupPixNum - globalPix % groupPixNum - 1
+    return groupId, getLensLocal(groupId, groupPixNum)
 
 
 def getY1(globalIdx, pixNum):
@@ -90,13 +98,7 @@ def getY3(globalPix, pixNum, lensNum):
     y3 = getLocalDis(leftLensLocalId, leftLensNum, getLeftLensPitch(pixNum, lensNum))
     if isDebug:
         print("y3 is:" + str(y3))
-    return (globalId, y3)
-
-
-def getLeftLensLocalId(globalPix, pixNum, lensNum):
-    groupPixNum = pixNum / lensNum
-    groupId = groupPixNum - globalPix % groupPixNum - 1
-    return groupId, getLensLocal(groupId, groupPixNum)
+    return globalId, y3
 
 
 ### y4-y3=(y2-y1)*g2/g1
@@ -114,7 +116,7 @@ def getY4(globalPix, pixNum, lensNum):
     y4 = (y2 - y1) * left2image_dis / right2image_dis + y3
     if isDebug:
         print("y4 is:" + str(y4))
-    return leftLensGlobalId, y4
+    return leftLensGlobalId, y3, y4
 
 
 ### g2=left2image_dis
@@ -123,9 +125,8 @@ def getImageSize(a):
 
 
 def getOffsetPos(globalPix, pixNum, lensNum, a):
-    (leftLensGlobalId, y4) = getY4(globalPix, pixNum, lensNum)
-    (globalId, y3) = getY3(globalPix, pixNum, lensNum)
-    return (leftLensGlobalId, round((y4 - y3 + 0.5 * getImageSize(a)) / p_left_dis))
+    (leftLensGlobalId, y3, y4) = getY4(globalPix, pixNum, lensNum)
+    return leftLensGlobalId, round((y4 - y3 + 0.5 * getImageSize(a)) / pix_left_dis)
 
 
 def getImageName(x, y):
@@ -141,7 +142,7 @@ def main(imgSize_x, imgSize_y, right_len_x, right_len_y, angle):
                 print("pix id: x:" + str(pix_x) + " y:" + str(pix_y))
             (left_lens_x, left_pix_x) = getOffsetPos(pix_x, imgSize_x, right_len_x, angle)
             (left_lens_y, left_pix_y) = getOffsetPos(pix_y, imgSize_y, right_len_y, angle)
-            dict[(pix_x, pix_y)] = ((left_lens_x, left_lens_y), (left_pix_x, left_pix_y))
+            dict[(pix_x, pix_y)] = ((int(left_lens_x), int(left_lens_y)), (int(left_pix_x), int(left_pix_y)))
 
     if isDebug:
         print("\n" + str(dict) + "\n")
@@ -158,6 +159,8 @@ def createParamList(imgSize_x, imgSize_y, right_len_x, right_len_y, angle):
 
 if __name__ == "__main__":
     # print(getImageName(108, 108))
+    start = time.localtime()
+    print time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     imgSize_x = 3840
     imgSize_y = 2160
     right_len_x = 35
@@ -176,18 +179,27 @@ if __name__ == "__main__":
     # # pool.close()
     # # pool.join()
     dict = main(real_pix_x, real_pix_y, right_len_x, right_len_y, angle)
-    lensImg = {}
-    for len_x in range(0, left_len_x):
-        for len_y in range(0, left_len_y):
-            imgName = getImageName(left_len_x, left_len_y)
-            lensImg[(len_x, len_y)] = Image.open(imgName)
-    rsArr = np.zeros((imgSize_x, imgSize_y))
+    # lensImg = {}
+    # for len_x in range(0, left_len_x):
+    #     for len_y in range(0, left_len_y):
+    #         imgName = getImageName(left_len_x, left_len_y)
+    #         lensImg[(len_x, len_y)] = Image.open(imgName)
+    rsArr = np.zeros((imgSize_x, imgSize_y, 3), dtype=int)
     for pix_x in range(0, real_pix_x):
         for pix_y in range(0, real_pix_y):
             ((left_lens_x, left_lens_y), (left_pix_x, left_pix_y)) = dict[(pix_x, pix_y)]
             imgName = getImageName(left_lens_x, left_lens_y)
-            img = Image.open(imgName)
+            img = mpimg.imread(imgName)
             rsArr[read_pix_x_offset + pix_x, read_pix_y_offset + pix_y] = img[(int(left_pix_x), int(left_pix_y))]
-    rsImg = Image.fromarray(rsArr)
-    rsImg.show()
-    rsImg.save('rs.tiff')
+            print("x:" + str(pix_x) + "\n y:" + str(pix_y))
+            # mpimg.imread(imgName)
+            # imFp = open(imgName, "rb")
+            # img = Image.open(imFp)
+            # rsArr[read_pix_x_offset + pix_x, read_pix_y_offset + pix_y] = img[(int(left_pix_x), int(left_pix_y))]
+            # imFp.close()
+    imageio.imsave('image2lens.png', rsArr)
+    print("cost time is:" + time.localtime() - start)
+    print time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    # rsImg = Image.fromarray(rsArr)
+    # rsImg.show()
+    # rsImg.save('rs.tiff')
