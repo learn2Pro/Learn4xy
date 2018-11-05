@@ -129,8 +129,8 @@ def getOffsetPos(globalPix, pixNum, lensNum, a):
 
 
 def getImageName(x, y):
-    realNum = str(x * 108 + y).zfill(5)
-    return "G:\TwoPickupII\ParaImages\Para" + str(realNum) + ".jpg"
+    realNum = str(x * 107 + y).zfill(5)
+    return "/Users/tang/export/Learn4xy/ParaImages/Para" + str(realNum) + ".jpg"
 
 
 def main(imgSize_x, imgSize_y, right_len_x, right_len_y, angle):
@@ -156,16 +156,8 @@ def createParamList(imgSize_x, imgSize_y, right_len_x, right_len_y, angle):
     return list
 
 
-def threadPoolHandle((pix_x, pix_y, imgSize_x, imgSize_y, right_len_x, right_len_y, angle)):
-    (left_lens_x, left_pix_x) = getOffsetPos(pix_x, imgSize_x, right_len_x, angle)
-    (left_lens_y, left_pix_y) = getOffsetPos(pix_y, imgSize_y, right_len_y, angle)
-    return ((left_lens_x, left_lens_y), (left_pix_x, left_pix_y))
-
-
-from multiprocessing.dummy import Pool as ThreadPool
-
 if __name__ == "__main__":
-    # print(getImageName(107, 107))
+    # print(getImageName(108, 108))
     imgSize_x = 3840
     imgSize_y = 2160
     right_len_x = 35
@@ -177,25 +169,25 @@ if __name__ == "__main__":
     left_len_x = 108
     left_len_y = 108
     angle = 72
-
-    params = createParamList(real_pix_x, real_pix_y, right_len_x, right_len_y, angle)
-    pool = ThreadPool(4)
-    dict = pool.map(threadPoolHandle, params)
-    pool.close()
-    pool.join()
-    # dict = main(real_pix_x, real_pix_y, right_len_x, right_len_y, angle)
-    # lensImg = {}
-    # for len_x in range(0, left_len_x):
-    #     for len_y in range(0, left_len_y):
-    #         imgName = getImageName(left_len_x,left_len_y)
-    #         lensImg[(len_x, len_y)] = Image.open(imgName)
-    # rsArr = np.zeros((imgSize_x, imgSize_y))
-    # for pix_x in range(0, real_pix_x):
-    #     for pix_y in range(0, real_pix_y):
-    #         ((left_lens_x, left_lens_y), (left_pix_x, left_pix_y)) = dict[(pix_x, pix_y)]
-    #         imgName = getImageName(left_lens_x, left_lens_y)
-    #         img = Image.open(imgName)
-    #         rsArr[read_pix_x_offset + pix_x, read_pix_y_offset + pix_y] = img[(int(left_pix_x), int(left_pix_y))]
-    # rsImg = Image.fromarray(rsArr)
-    # rsImg.show()
-    # rsImg.save('rs.tiff')
+    #
+    # # params = createParamList(real_pix_x, real_pix_y, right_len_x, right_len_y, angle)
+    # # pool = ThreadPool(8)
+    # # dict = pool.map(threadPoolHandle, params)
+    # # pool.close()
+    # # pool.join()
+    dict = main(real_pix_x, real_pix_y, right_len_x, right_len_y, angle)
+    lensImg = {}
+    for len_x in range(0, left_len_x):
+        for len_y in range(0, left_len_y):
+            imgName = getImageName(left_len_x, left_len_y)
+            lensImg[(len_x, len_y)] = Image.open(imgName)
+    rsArr = np.zeros((imgSize_x, imgSize_y))
+    for pix_x in range(0, real_pix_x):
+        for pix_y in range(0, real_pix_y):
+            ((left_lens_x, left_lens_y), (left_pix_x, left_pix_y)) = dict[(pix_x, pix_y)]
+            imgName = getImageName(left_lens_x, left_lens_y)
+            img = Image.open(imgName)
+            rsArr[read_pix_x_offset + pix_x, read_pix_y_offset + pix_y] = img[(int(left_pix_x), int(left_pix_y))]
+    rsImg = Image.fromarray(rsArr)
+    rsImg.show()
+    rsImg.save('rs.tiff')
