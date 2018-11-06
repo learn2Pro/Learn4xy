@@ -32,7 +32,7 @@ def getLeftLensPitch(pixNum, lensNum):
     return (((leftLensNum - 1) * pix_right_dis * right2left_lens_dis) / right2image_dis) / (leftLensNum - 1)
 
 
-def getOdd(num):
+def getOddTag(num):
     if num % 2 == 0:
         return 1
     else:
@@ -40,10 +40,10 @@ def getOdd(num):
 
 
 ###global 2 local
-def getLensLocal(lens_global_loc, lens_num):
-    odd = getOdd(lens_num)
-    mid = math.ceil(lens_num / 2)
-    diff = lens_global_loc - mid
+def parseGlobal2Local(global_loc, num):
+    odd = getOddTag(num)
+    mid = math.ceil(num / 2)
+    diff = global_loc - mid
     if diff >= 0:
         return diff + 1 * odd
     else:
@@ -52,7 +52,7 @@ def getLensLocal(lens_global_loc, lens_num):
 
 ##lens dis == y2
 def getLocalDis(localIdx, lens_num, pitch):
-    odd = getOdd(lens_num)
+    odd = getOddTag(lens_num)
     if localIdx < 0:
         return (localIdx + 0.5 * odd) * pitch
     else:
@@ -60,11 +60,11 @@ def getLocalDis(localIdx, lens_num, pitch):
 
 
 ## y1 pix dis
-def getPixDis(globalPix, pixNum):
-    local = getLensLocal(globalPix, pixNum)
+def getPixDis(globalPix, pixNum, pix_dis):
+    local = parseGlobal2Local(globalPix, pixNum)
     if isDebug:
         print("right pix local id:" + str(local))
-    rightPixDis = getLocalDis(local, pixNum, pix_right_dis)
+    rightPixDis = getLocalDis(local, pixNum, pix_dis)
     if isDebug:
         print("rightPixDis:" + str(rightPixDis))
     return rightPixDis
@@ -72,20 +72,20 @@ def getPixDis(globalPix, pixNum):
 
 ##return local lens id
 
-def getPix2LensMappingV2(globalPix, pixNum, lensNum):
+def getPix2RightLensMapping(globalPix, pixNum, lensNum):
     groupPixNum = pixNum / lensNum
     globalLensId = globalPix / groupPixNum
-    return globalLensId, getLensLocal(globalLensId, lensNum)
+    return globalLensId, parseGlobal2Local(globalLensId, lensNum)
 
 
 def getLeftLensLocalId(globalPix, pixNum, lensNum):
     groupPixNum = pixNum / lensNum
     groupId = groupPixNum - globalPix % groupPixNum - 1
-    return groupId, getLensLocal(groupId, groupPixNum)
+    return groupId, parseGlobal2Local(groupId, groupPixNum)
 
 
-def getY1(globalIdx, pixNum):
-    return getPixDis(globalIdx, pixNum)
+def getY1(globalIdx, pixNum, pix_dis):
+    return getPixDis(globalIdx, pixNum, pix_dis)
 
 
 def getY2(localIdx, lens_num):
@@ -105,10 +105,10 @@ def getY3(globalPix, pixNum, lensNum):
 ### g1=right2image_dis
 ### g2=left2image_dis
 def getY4(globalPix, pixNum, lensNum):
-    y1 = getY1(globalPix, pixNum)
+    y1 = getY1(globalPix, pixNum, pix_right_dis)
     if isDebug:
         print("y1 is:" + str(y1))
-    (rightLensGlobalId, localId) = getPix2LensMappingV2(globalPix, pixNum, lensNum)
+    (rightLensGlobalId, localId) = getPix2RightLensMapping(globalPix, pixNum, lensNum)
     (leftLensGlobalId, y3) = getY3(globalPix, pixNum, lensNum)
     y2 = getY2(localId, lensNum)
     if isDebug:
@@ -130,7 +130,7 @@ def getOffsetPos(globalPix, pixNum, lensNum, a):
 
 
 def getImageName(x, y):
-    realNum = str(x * 107 + y).zfill(5)
+    realNum = str(x * 108 + y + 1).zfill(5)
     return "/Users/tang/export/Learn4xy/ParaImages/Para" + str(realNum) + ".jpg"
 
 
@@ -158,7 +158,11 @@ def createParamList(imgSize_x, imgSize_y, right_len_x, right_len_y, angle):
 
 
 if __name__ == "__main__":
-    # print(getImageName(108, 108))
+    # left_len_x = 108
+    # left_len_y = 108
+    # for len_x in range(0, left_len_x):
+    #     for len_y in range(0, left_len_y):
+    #         print(getImageName(len_x, len_y))
     start = time.localtime()
     print time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     imgSize_x = 3840
@@ -173,31 +177,45 @@ if __name__ == "__main__":
     left_len_y = 108
     angle = 72
     #
-    # # params = createParamList(real_pix_x, real_pix_y, right_len_x, right_len_y, angle)
-    # # pool = ThreadPool(8)
-    # # dict = pool.map(threadPoolHandle, params)
-    # # pool.close()
-    # # pool.join()
+    # imgSize_x = 20
+    # imgSize_y = 20
+    # right_len_x = 4
+    # right_len_y = 4
+    # real_pix_x = 20
+    # real_pix_y = 20
+    # read_pix_x_offset = (imgSize_x - real_pix_x) / 2
+    # read_pix_y_offset = (imgSize_y - real_pix_y) / 2
+    # left_len_x = 5
+    # left_len_y = 5
+    # angle = 72
+
     dict = main(real_pix_x, real_pix_y, right_len_x, right_len_y, angle)
-    # lensImg = {}
-    # for len_x in range(0, left_len_x):
-    #     for len_y in range(0, left_len_y):
-    #         imgName = getImageName(left_len_x, left_len_y)
-    #         lensImg[(len_x, len_y)] = Image.open(imgName)
+
     rsArr = np.zeros((imgSize_x, imgSize_y, 3), dtype=int)
+    cnt = 0
     for pix_x in range(0, real_pix_x):
         for pix_y in range(0, real_pix_y):
             ((left_lens_x, left_lens_y), (left_pix_x, left_pix_y)) = dict[(pix_x, pix_y)]
             imgName = getImageName(left_lens_x, left_lens_y)
+            # if cnt == 0:
+            #     img = Image.fromarray(np.ones((1300, 1300, 3)), mode='RGB')
+            # else:
+            #     img = Image.fromarray(np.zeros((1300, 1300, 3)), mode='RGB')
+            # cnt += 1
+            #
+            # rsArr[read_pix_x_offset + pix_x, read_pix_y_offset + pix_y] = img.getpixel((0,0))
             img = mpimg.imread(imgName)
             rsArr[read_pix_x_offset + pix_x, read_pix_y_offset + pix_y] = img[(int(left_pix_x), int(left_pix_y))]
-            print("x:" + str(pix_x) + "\n y:" + str(pix_y))
+            print("x_3:" + str(pix_x) + "\n y_3:" + str(pix_y))
             # mpimg.imread(imgName)
             # imFp = open(imgName, "rb")
             # img = Image.open(imFp)
             # rsArr[read_pix_x_offset + pix_x, read_pix_y_offset + pix_y] = img[(int(left_pix_x), int(left_pix_y))]
             # imFp.close()
-    imageio.imsave('image2lens.png', rsArr)
+    rs = Image.fromarray(rsArr,mode='RGB')
+    rs.show()
+    rs.save("image2lens_last.png")
+    # imageio.imsave('image2lens_4.png', rsArr)
     print("cost time is:" + time.localtime() - start)
     print time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     # rsImg = Image.fromarray(rsArr)
