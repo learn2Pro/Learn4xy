@@ -165,16 +165,29 @@ if __name__ == "__main__":
     #         print(getImageName(len_x, len_y))
     start = time.localtime()
     print time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-    imgSize_x = 3840
-    imgSize_y = 2160
-    right_len_x = 35
-    right_len_y = 20
-    real_pix_x = 3780
-    real_pix_y = 2160
-    read_pix_x_offset = (imgSize_x - real_pix_x) / 2
-    read_pix_y_offset = (imgSize_y - real_pix_y) / 2
-    left_len_x = 108
-    left_len_y = 108
+    # imgSize_x = 3840
+    # imgSize_y = 2160
+    # right_len_x = 35
+    # right_len_y = 20
+    # real_pix_x = 3780
+    # real_pix_y = 2160
+    # read_pix_x_offset = (imgSize_x - real_pix_x) / 2
+    # read_pix_y_offset = (imgSize_y - real_pix_y) / 2
+    # left_len_x = 108
+    # left_len_y = 108
+    # angle = 72
+
+    # imgSize_x = 20
+    # imgSize_y = 20
+    # right_len_x = 4
+    # right_len_y = 4
+    # left_len_x = 5
+    # left_len_y = 5
+    # real_pix_x = left_len_x * right_len_x
+    # real_pix_y = left_len_y * right_len_y
+    # read_pix_x_offset = (imgSize_x - real_pix_x) / 2
+    # read_pix_y_offset = (imgSize_y - real_pix_y) / 2
+
     angle = 72
     #
     # imgSize_x = 20
@@ -212,7 +225,7 @@ if __name__ == "__main__":
             # img = Image.open(imFp)
             # rsArr[read_pix_x_offset + pix_x, read_pix_y_offset + pix_y] = img[(int(left_pix_x), int(left_pix_y))]
             # imFp.close()
-    rs = Image.fromarray(rsArr,mode='RGB')
+    rs = Image.fromarray(rsArr, mode='RGB')
     rs.show()
     rs.save("image2lens_last.png")
     # imageio.imsave('image2lens_4.png', rsArr)
