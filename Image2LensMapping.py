@@ -1,13 +1,11 @@
 import math
 import numpy as np
 
-from matplotlib import pyplot as plt
-from PIL import Image
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-from scipy import misc
-import imageio
 import time
+import cv2
+from PIL import ImageEnhance
 
 ## default size
 ## mm
@@ -45,9 +43,9 @@ def parseGlobal2Local(global_loc, num):
     mid = math.ceil(num / 2)
     diff = global_loc - mid
     if diff >= 0:
-        return diff + 1 * odd
+        return int(diff + 1 * odd)
     else:
-        return diff
+        return int(diff)
 
 
 ##lens dis == y2
@@ -81,6 +79,7 @@ def getPix2RightLensMapping(globalPix, pixNum, lensNum):
 def getLeftLensLocalId(globalPix, pixNum, lensNum):
     groupPixNum = pixNum / lensNum
     groupId = groupPixNum - globalPix % groupPixNum - 1
+    # groupId = globalPix % groupPixNum
     return groupId, parseGlobal2Local(groupId, groupPixNum)
 
 
@@ -121,12 +120,12 @@ def getY4(globalPix, pixNum, lensNum):
 
 ### g2=left2image_dis
 def getImageSize(a):
-    return 2 * left2image_dis * math.tan(a / 2.0 * math.pi / 180.0)
+    return 2 * left2image_dis * math.tan(a / 2.0 * 3.14 / 180.0)
 
 
 def getOffsetPos(globalPix, pixNum, lensNum, a):
     (leftLensGlobalId, y3, y4) = getY4(globalPix, pixNum, lensNum)
-    return leftLensGlobalId, round((y4 - y3 + 0.5 * getImageSize(a)) / pix_left_dis)
+    return leftLensGlobalId, int((y4 - y3 + 0.5 * getImageSize(a)) / pix_left_dis)
 
 
 def getImageName(x, y):
@@ -135,26 +134,18 @@ def getImageName(x, y):
 
 
 def main(imgSize_x, imgSize_y, right_len_x, right_len_y, angle):
-    dict = {}
-    for pix_x in range(0, imgSize_x):
-        for pix_y in range(0, imgSize_y):
+    dict_lens_arr = []
+
+    for x in range(0, imgSize_x):
+        for y in range(0, imgSize_y):
             if isDebug:
-                print("pix id: x:" + str(pix_x) + " y:" + str(pix_y))
-            (left_lens_x, left_pix_x) = getOffsetPos(pix_x, imgSize_x, right_len_x, angle)
-            (left_lens_y, left_pix_y) = getOffsetPos(pix_y, imgSize_y, right_len_y, angle)
-            dict[(pix_x, pix_y)] = ((int(left_lens_x), int(left_lens_y)), (int(left_pix_x), int(left_pix_y)))
+                print("pix id: x:" + str(x) + " y:" + str(y))
+            (left_lens_x, left_pix_x) = getOffsetPos(x, imgSize_x, right_len_x, angle)
+            (left_lens_y, left_pix_y) = getOffsetPos(y, imgSize_y, right_len_y, angle)
 
-    if isDebug:
-        print("\n" + str(dict) + "\n")
-    return dict
-
-
-def createParamList(imgSize_x, imgSize_y, right_len_x, right_len_y, angle):
-    list = []
-    for pix_x in range(0, imgSize_x):
-        for pix_y in range(0, imgSize_y):
-            list.append((pix_x, pix_y, imgSize_x, imgSize_y, right_len_x, right_len_y, angle))
-    return list
+            dict_lens_arr.append(((int(left_lens_x), int(left_lens_y)), (int(left_pix_x), int(left_pix_y), x, y)))
+    dict_lens_arr.sort(key=lambda x: x[0])
+    return dict_lens_arr
 
 
 if __name__ == "__main__":
@@ -165,17 +156,18 @@ if __name__ == "__main__":
     #         print(getImageName(len_x, len_y))
     start = time.localtime()
     print time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-    # imgSize_x = 3840
-    # imgSize_y = 2160
-    # right_len_x = 35
-    # right_len_y = 20
-    # real_pix_x = 3780
-    # real_pix_y = 2160
-    # read_pix_x_offset = (imgSize_x - real_pix_x) / 2
-    # read_pix_y_offset = (imgSize_y - real_pix_y) / 2
-    # left_len_x = 108
-    # left_len_y = 108
-    # angle = 72
+    imgSize_x = 3840
+    imgSize_y = 2160
+    right_len_x = 35
+    right_len_y = 20
+    left_len_x = 108
+    left_len_y = 108
+    real_pix_x = right_len_x * left_len_x
+    real_pix_y = right_len_y * left_len_y
+    read_pix_x_offset = (imgSize_x - real_pix_x) / 2
+    read_pix_y_offset = (imgSize_y - real_pix_y) / 2
+
+    angle = 72
 
     # imgSize_x = 20
     # imgSize_y = 20
@@ -187,50 +179,48 @@ if __name__ == "__main__":
     # real_pix_y = left_len_y * right_len_y
     # read_pix_x_offset = (imgSize_x - real_pix_x) / 2
     # read_pix_y_offset = (imgSize_y - real_pix_y) / 2
-
-    angle = 72
-    #
-    # imgSize_x = 20
-    # imgSize_y = 20
-    # right_len_x = 4
-    # right_len_y = 4
-    # real_pix_x = 20
-    # real_pix_y = 20
-    # read_pix_x_offset = (imgSize_x - real_pix_x) / 2
-    # read_pix_y_offset = (imgSize_y - real_pix_y) / 2
-    # left_len_x = 5
-    # left_len_y = 5
     # angle = 72
 
     dict = main(real_pix_x, real_pix_y, right_len_x, right_len_y, angle)
 
-    rsArr = np.zeros((imgSize_x, imgSize_y, 3), dtype=int)
+    dictTime = time.localtime()
+    print("cost generate dict time is:" + str(time.mktime(dictTime) - time.mktime(start)) + "s !!!")
+    rsArr = np.zeros((imgSize_y, imgSize_x, 3), dtype=int)
     cnt = 0
-    for pix_x in range(0, real_pix_x):
-        for pix_y in range(0, real_pix_y):
-            ((left_lens_x, left_lens_y), (left_pix_x, left_pix_y)) = dict[(pix_x, pix_y)]
-            imgName = getImageName(left_lens_x, left_lens_y)
-            # if cnt == 0:
-            #     img = Image.fromarray(np.ones((1300, 1300, 3)), mode='RGB')
-            # else:
-            #     img = Image.fromarray(np.zeros((1300, 1300, 3)), mode='RGB')
-            # cnt += 1
-            #
-            # rsArr[read_pix_x_offset + pix_x, read_pix_y_offset + pix_y] = img.getpixel((0,0))
+    # for pix_x in range(0, real_pix_x):
+    #     for pix_y in range(0, real_pix_y):
+    #         ((left_lens_x, left_lens_y), (left_pix_x, left_pix_y)) = dict[(pix_x, pix_y)]
+    #         imgName = getImageName(left_lens_x, left_lens_y)
+    #         img = mpimg.imread(imgName)
+    #         rsArr[read_pix_x_offset + pix_x, read_pix_y_offset + pix_y, :] = img[(int(left_pix_x), int(left_pix_y)), :]
+    #         print("x_3:" + str(pix_x) + "\n y_3:" + str(pix_y))
+    # for right2image_step in range(-10, 10):
+    #     for left2image_step in range(-10, 10):
+    #         for pix_right_step in range(-10, 10):
+    #             for pix_left_step in range(-10, 10):
+    #                 right2image_dis += right2image_step * 0.01
+    #                 left2image_dis += left2image_step * 0.1
+    #                 pix_right_dis += pix_right_step * 0.01
+    #                 pix_left_dis += pix_left_step * 0.01
+    (curImg_x, curImg_y) = -1, -1
+    curLogTag = -1
+    img = None
+    for ((left_lens_x, left_lens_y), (left_pix_x, left_pix_y, x, y)) in dict:
+        ## when lens switch then switch the image
+        if (left_lens_x, left_lens_y) != (curImg_x, curImg_y):
+            (curImg_x, curImg_y) = (left_lens_x, left_lens_y)
+            print("yx_yx||x_:" + str(curImg_x) + " y_:" + str(curImg_y))
+            imgName = getImageName(left_lens_y, left_lens_x)
             img = mpimg.imread(imgName)
-            rsArr[read_pix_x_offset + pix_x, read_pix_y_offset + pix_y] = img[(int(left_pix_x), int(left_pix_y))]
-            print("x_3:" + str(pix_x) + "\n y_3:" + str(pix_y))
-            # mpimg.imread(imgName)
-            # imFp = open(imgName, "rb")
-            # img = Image.open(imFp)
-            # rsArr[read_pix_x_offset + pix_x, read_pix_y_offset + pix_y] = img[(int(left_pix_x), int(left_pix_y))]
-            # imFp.close()
-    rs = Image.fromarray(rsArr, mode='RGB')
-    rs.show()
-    rs.save("image2lens_last.png")
-    # imageio.imsave('image2lens_4.png', rsArr)
-    print("cost time is:" + time.localtime() - start)
+        rsArr[read_pix_y_offset + y, read_pix_x_offset + x, :] = img[left_pix_y + 1, left_pix_x + 1, :]
+
+    plt.imshow(rsArr)
+    # cv2.equalizeHist(tmp)
+    # ImageEnhance.Sharpness(rsArr)
+    plt.imsave(
+        "image2lens_" + right2image_dis + "_" + left2image_dis + "_" + pix_right_dis + "_" + pix_left_dis + "_" + str(
+            time.mktime(time.localtime())) + ".png", rsArr)
+    print("")
+    print("cost image parse time is:" + str(
+        time.mktime(time.localtime()) - time.mktime(dictTime)) + "s !!!")
     print time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-    # rsImg = Image.fromarray(rsArr)
-    # rsImg.show()
-    # rsImg.save('rs.tiff')
